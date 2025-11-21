@@ -87,7 +87,7 @@ const navMenu = computed<DropdownOption[]>(() => [
   }, 
   {
     key: "github",
-    label: "GitHub",
+    label: "Airi",
     icon: renderIcon("icon:airi"),
     props: {
       onClick: () => window.open("https://airi.inoribea.org"),
