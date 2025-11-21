@@ -16,7 +16,7 @@
     </n-flex>
     <n-flex :size="4" class="text" align="center" vertical>
       <n-p depth="3">
-        <n-text depth="3" @click="jumpLink(linkData.github)">
+        <n-text depth="3" @click="jumpLink('https://github.com/inoribea/site-status')">
           SiteStatus
         </n-text>
         Version {{ version }}
