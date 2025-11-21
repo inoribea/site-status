@@ -91,7 +91,8 @@ const navMenu = computed<DropdownOption[]>(() => [
     icon: renderIcon("icon:info"),
     props: {
       onClick: () => window.open("https://sink.inoribea.org/dashboard/links"),
-  },
+    },
+  }, 
   {
     key: "logout",
     label: t("nav.logout"),
