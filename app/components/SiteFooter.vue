@@ -50,7 +50,7 @@ const { public: configPublic } = useRuntimeConfig();
 const { siteIcp, version } = configPublic;
 
 const linkData = {
-  github: "https://github.com/inoribea/site-status",
+  github: "https://github.com/inoribea",
   home: "https://home.inoribea.org",
   email: "mailto:inoribea@outlook.com",
 };
