@@ -78,14 +78,6 @@ const renderIcon = (icon: string) => () =>
 // 导航栏菜单
 const navMenu = computed<DropdownOption[]>(() => [
   {
-    key: "github",
-    label: "GitHub",
-    icon: renderIcon("icon:github"),
-    props: {
-      onClick: () => window.open("https://github.com/inoribea/site-status"),
-    },
-  },
-  {
     key: "about",
     label: t("nav.about"),
     icon: renderIcon("icon:info"),
@@ -93,6 +85,14 @@ const navMenu = computed<DropdownOption[]>(() => [
       onClick: () => window.open("https://sink.inoribea.org/dashboard/links"),
     },
   }, 
+  {
+    key: "github",
+    label: "GitHub",
+    icon: renderIcon("icon:github"),
+    props: {
+      onClick: () => window.open("https://github.com/inoribea/site-status"),
+    },
+  },
   {
     key: "logout",
     label: t("nav.logout"),
