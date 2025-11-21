@@ -82,13 +82,15 @@ const navMenu = computed<DropdownOption[]>(() => [
     label: "GitHub",
     icon: renderIcon("icon:github"),
     props: {
-      onClick: () => window.open("https://github.com/imsyy/site-status"),
+      onClick: () => window.open("https://github.com/inoribea/site-status"),
     },
   },
   {
     key: "about",
-    label: t("nav.about"),
+    label: "Sink",
     icon: renderIcon("icon:info"),
+    props: {
+      onClick: () => window.open("https://sink.inoribea.org/dashboard/links"),
   },
   {
     key: "logout",
