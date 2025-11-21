@@ -87,7 +87,7 @@ const navMenu = computed<DropdownOption[]>(() => [
   },
   {
     key: "about",
-    label: "Sink",
+    label: t("nav.about"),
     icon: renderIcon("icon:info"),
     props: {
       onClick: () => window.open("https://sink.inoribea.org/dashboard/links"),
