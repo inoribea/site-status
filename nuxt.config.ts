@@ -97,6 +97,13 @@ export default defineNuxtConfig({
   },
   devServer: { port: 8566 },
   future: { compatibilityVersion: 4 },
+  nitro: {
+    vercel: {
+      functions: {
+        maxDuration: 30
+      }
+    }
+  },
   compatibilityDate: "2024-11-11",
   // vite
   vite: {
