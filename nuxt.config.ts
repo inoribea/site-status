@@ -103,9 +103,6 @@ export default defineNuxtConfig({
   compatibilityDate: "2024-11-11",
   nitro: {
     vercel: {
-      config: {
-        crons: [{ path: "/refresh", schedule: "*/5 * * * *" }],
-      },
       functions: {
         maxDuration: 30,
         regions: ["hkg1"],
