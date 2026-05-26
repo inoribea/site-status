@@ -105,6 +105,7 @@ export default defineNuxtConfig({
     vercel: {
       functions: {
         maxDuration: 30,
+        regions: ["hkg1"],
       },
     },
   },
