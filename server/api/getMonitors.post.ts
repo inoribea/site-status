@@ -1,8 +1,49 @@
 // https://uptimerobot.com/api/#methods
 import dayjs from "dayjs";
+import {
+  getFreshSiteData,
+  getStaleSiteData,
+  setSiteDataCache,
+} from "../utils/status-cache";
 import type { MonitorsDataResult, MonitorsResult } from "~~/types/main";
-import { getCache, setCache } from "~/utils/cache-server";
 import { formatSiteData } from "~/utils/format";
+
+type RuntimeConfig = ReturnType<typeof useRuntimeConfig>;
+
+const normalizeApiUrl = (url: string): string =>
+  url.endsWith("/") ? url : `${url}/`;
+
+const getApiUrls = (config: RuntimeConfig): string[] => {
+  const values = [
+    config.apiUrl,
+    ...String(config.apiUrls || "")
+      .split(",")
+      .map((url) => url.trim()),
+  ];
+  return Array.from(new Set(values.filter(Boolean).map(normalizeApiUrl)));
+};
+
+const fetchMonitors = async (
+  apiUrls: string[],
+  body: Record<string, string | number>,
+): Promise<unknown> => {
+  let lastError: unknown;
+  const attempts = apiUrls.length === 1 ? [apiUrls[0], apiUrls[0]] : apiUrls;
+  for (const apiUrl of attempts) {
+    try {
+      return await $fetch(`${apiUrl}getMonitors`, {
+        method: "POST",
+        body,
+        timeout: 8000,
+      });
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Upstream request failed");
+};
 
 const getRanges = ():
   | {
@@ -39,8 +80,9 @@ const getRanges = ():
 export default defineEventHandler(async (event): Promise<MonitorsResult> => {
   try {
     const config = useRuntimeConfig();
-    const { apiUrl, apiKey, sitePassword, siteSecretKey } = config;
-    if (!apiUrl || !apiKey) {
+    const { apiKey, sitePassword, siteSecretKey } = config;
+    const apiUrls = getApiUrls(config);
+    if (!apiUrls.length || !apiKey) {
       throw new Error("Missing API url or API key");
     }
     // 若登录-验证 token
@@ -51,10 +93,8 @@ export default defineEventHandler(async (event): Promise<MonitorsResult> => {
       const isLogin = await verifyJwt(token);
       if (!isLogin) throw new Error("Invalid or expired token");
     }
-    // 缓存键
-    const cacheKey = "site-data";
     // 检查缓存
-    const cachedData = getCache(cacheKey);
+    const cachedData = getFreshSiteData();
     if (cachedData) {
       return {
         code: 200,
@@ -81,41 +121,10 @@ export default defineEventHandler(async (event): Promise<MonitorsResult> => {
       logs_end_date: end,
       custom_uptime_ranges: ranges,
     };
-    // 尝试获取（带超时和重试）
-    let result;
-    let lastError;
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        result = await $fetch(apiUrl + "getMonitors", {
-          method: "POST",
-          body,
-          timeout: 15000,
-        });
-        break;
-      } catch (err) {
-        lastError = err;
-        if (attempt === 0) continue;
-      }
-    }
-    if (!result) {
-      // 上游失败，尝试返回过期缓存
-      const staleData = getCache(cacheKey + ":stale");
-      if (staleData) {
-        return {
-          code: 200,
-          message: "success (stale)",
-          source: "cache",
-          data: staleData as MonitorsDataResult,
-        };
-      }
-      throw lastError instanceof Error ? lastError : new Error("Upstream request failed");
-    }
+    const result = await fetchMonitors(apiUrls, body);
     // 处理数据
     const data = formatSiteData(result, dates);
-    // 缓存数据（2 分钟）
-    setCache(cacheKey, data, 1000 * 60 * 2);
-    // 同时存一份不过期的 stale 缓存
-    setCache(cacheKey + ":stale", data);
+    await setSiteDataCache(data);
     return {
       code: 200,
       message: "success",
@@ -123,8 +132,7 @@ export default defineEventHandler(async (event): Promise<MonitorsResult> => {
       data,
     };
   } catch (error) {
-    // 最终降级：尝试返回过期缓存
-    const staleData = getCache("site-data:stale");
+    const staleData = await getStaleSiteData();
     if (staleData) {
       return {
         code: 200,

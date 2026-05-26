@@ -5,6 +5,8 @@ import pkg from "./package.json";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
+const showLink = process.env.SHOW_LINK ?? process.env.SHOW_LINKS;
+
 // site env
 const siteConfig = {
   siteTitle: process.env.SITE_TITLE || "IMSYY 站点监测",
@@ -13,7 +15,7 @@ const siteConfig = {
   siteLogo: process.env.SITE_LOGO || "/favicon.ico",
   siteIcp: process.env.SITE_ICP || "",
   countDays: Number(process.env.COUNT_DAYS || 60),
-  showLink: process.env.SHOW_LINK === "true",
+  showLink: showLink === undefined ? true : showLink === "true",
   platform: process.env.DEPLOYMENT_PLATFORM || "cloudflare",
   version: pkg.version,
 };
@@ -90,6 +92,7 @@ export default defineNuxtConfig({
   // env
   runtimeConfig: {
     apiUrl: process.env.API_URL || "https://api.uptimerobot.com/v2/",
+    apiUrls: process.env.API_URLS || "",
     apiKey: process.env.API_KEY,
     sitePassword: process.env.SITE_PASSWORD,
     siteSecretKey: process.env.SITE_SECRE_KEY || "site-status",
@@ -97,14 +100,14 @@ export default defineNuxtConfig({
   },
   devServer: { port: 8566 },
   future: { compatibilityVersion: 4 },
+  compatibilityDate: "2024-11-11",
   nitro: {
     vercel: {
       functions: {
-        maxDuration: 30
-      }
-    }
+        maxDuration: 30,
+      },
+    },
   },
-  compatibilityDate: "2024-11-11",
   // vite
   vite: {
     plugins: [

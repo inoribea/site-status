@@ -84,7 +84,7 @@ const navMenu = computed<DropdownOption[]>(() => [
     props: {
       onClick: () => window.open("https://sink.inoribea.org/dashboard/links"),
     },
-  }, 
+  },
   {
     key: "github",
     label: "AIRI",
