@@ -81,15 +81,41 @@ export default defineEventHandler(async (event): Promise<MonitorsResult> => {
       logs_end_date: end,
       custom_uptime_ranges: ranges,
     };
-    // 尝试获取
-    const result = await $fetch(apiUrl + "getMonitors", {
-      method: "POST",
-      body,
-    });
+    // 尝试获取（带超时和重试）
+    let result;
+    let lastError;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        result = await $fetch(apiUrl + "getMonitors", {
+          method: "POST",
+          body,
+          timeout: 15000,
+        });
+        break;
+      } catch (err) {
+        lastError = err;
+        if (attempt === 0) continue;
+      }
+    }
+    if (!result) {
+      // 上游失败，尝试返回过期缓存
+      const staleData = getCache(cacheKey + ":stale");
+      if (staleData) {
+        return {
+          code: 200,
+          message: "success (stale)",
+          source: "cache",
+          data: staleData as MonitorsDataResult,
+        };
+      }
+      throw lastError instanceof Error ? lastError : new Error("Upstream request failed");
+    }
     // 处理数据
     const data = formatSiteData(result, dates);
-    // 缓存数据
-    setCache(cacheKey, data, 1000 * 60);
+    // 缓存数据（2 分钟）
+    setCache(cacheKey, data, 1000 * 60 * 2);
+    // 同时存一份不过期的 stale 缓存
+    setCache(cacheKey + ":stale", data);
     return {
       code: 200,
       message: "success",
@@ -97,6 +123,16 @@ export default defineEventHandler(async (event): Promise<MonitorsResult> => {
       data,
     };
   } catch (error) {
+    // 最终降级：尝试返回过期缓存
+    const staleData = getCache("site-data:stale");
+    if (staleData) {
+      return {
+        code: 200,
+        message: "success (stale)",
+        source: "cache",
+        data: staleData as MonitorsDataResult,
+      };
+    }
     setResponseStatus(event, 500);
     return {
       code: 500,
