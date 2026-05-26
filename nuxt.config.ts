@@ -104,7 +104,7 @@ export default defineNuxtConfig({
   nitro: {
     vercel: {
       config: {
-        crons: [{ path: "/api/refresh", schedule: "*/5 * * * *" }],
+        crons: [{ path: "/refresh", schedule: "*/5 * * * *" }],
       },
       functions: {
         maxDuration: 30,
